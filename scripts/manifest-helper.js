@@ -20,6 +20,20 @@ async function buildManifest(base) {
     data.name = name;
     data.browser_action.default_title = name;
   }
+  if (process.env.MV3) {
+    data.manifest_version = 3;
+    data.action = data.browser_action;
+    delete data.browser_action;
+    data.background = {
+      service_worker: 'service_worker.js',
+    };
+    data.permissions = [
+      ...data.permissions.filter(p => p !== 'webRequestBlocking'),
+      'userScripts',
+      'scripting',
+    ];
+    delete data.browser_specific_settings;
+  }
   return data;
 }
 

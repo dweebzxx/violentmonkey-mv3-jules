@@ -10,7 +10,9 @@ const { getVersion, isBeta } = require('./scripts/version-helper');
 const { buildManifest } = require('./scripts/manifest-helper');
 const pkg = require('./package.json');
 
-const DIST = 'dist';
+const processArgs = process.argv;
+const isMV3 = processArgs.includes('--mv3');
+const DIST = isMV3 ? 'dist/mv3' : 'dist';
 const paths = {
   manifest: 'src/manifest.yml',
   locales: [
@@ -31,11 +33,13 @@ function watch() {
 }
 
 async function jsDev() {
-  return runCommand('webpack-cli', ['-w', '--config', 'scripts/webpack.conf.js']);
+  const config = isMV3 ? 'scripts/webpack.mv3.conf.js' : 'scripts/webpack.conf.js';
+  return runCommand('webpack-cli', ['-w', '--config', config]);
 }
 
 async function jsProd() {
-  return runCommand('webpack-cli', ['--config', 'scripts/webpack.conf.js']);
+  const config = isMV3 ? 'scripts/webpack.mv3.conf.js' : 'scripts/webpack.conf.js';
+  return runCommand('webpack-cli', ['--config', config]);
 }
 
 function runCommand(command, args) {
