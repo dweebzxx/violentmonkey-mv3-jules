@@ -130,6 +130,7 @@ browser.tabs.onCreated.addListener((tab) => {
 });
 
 browser.webRequest.onBeforeRequest.addListener((req) => {
+  if (chrome.runtime.getManifest().manifest_version === 3) return;
   const { method, tabId, url } = req;
   if (method !== 'GET') {
     return;

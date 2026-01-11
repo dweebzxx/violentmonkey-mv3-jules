@@ -11,6 +11,7 @@ import {
   aliveScripts, getDefaultCustom, getNameURI, inferScriptProps, newScript, parseMeta,
   removedScripts, scriptMap,
 } from './script';
+import { updateUserScripts } from './user-script-registry';
 import { testBlacklist, testerBatch, testScript } from './tester';
 import { getImageData } from './icon';
 import { addOwnCommands, addPublicCommands, commands, resolveInit } from './init';
@@ -180,6 +181,7 @@ addOwnCommands({
     });
   }
   sortScripts();
+  updateUserScripts(aliveScripts);
   setTimeout(async () => {
     if (allKeys?.length) {
       const set = new Set(keys); // much faster lookup

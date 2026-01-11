@@ -39,6 +39,11 @@ const API_CONFIG = {
   urls: ['*://*/*'], // `*` scheme matches only http and https
   types: ['main_frame', 'sub_frame'],
 };
+
+if (chrome.runtime.getManifest().manifest_version === 3) {
+  // eslint-disable-next-line no-func-assign
+  togglePreinject = () => {};
+}
 const API_EXTRA = [
   'blocking', // used for xhrInject and to make Firefox fire the event before GetInjected
   kResponseHeaders,

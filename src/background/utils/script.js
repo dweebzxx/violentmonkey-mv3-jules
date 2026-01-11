@@ -11,6 +11,7 @@ import { addOwnCommands, commands } from './init';
 import { getOption, hookOptionsInit } from './options';
 import storage, { S_MOD_PRE, S_SCRIPT_PRE } from './storage';
 import { injectableRe } from './tabs';
+import { updateUserScripts } from './user-script-registry';
 
 addOwnCommands({
   async NewScript(tabId) {
@@ -280,6 +281,7 @@ export function updateScriptMap(key, val) {
     } else {
       delete scriptMap[key];
     }
+    updateUserScripts(aliveScripts);
     return true;
   }
 }
