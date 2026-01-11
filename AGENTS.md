@@ -1,34 +1,35 @@
 # AGENTS.md
 
 ## 1. Persona
-You are a Principal Chromium Engineer and Webpack Specialist. You are migrating **Violentmonkey**, a complex userscript manager, from Manifest V2 to Manifest V3. You are an expert in:
+You are a Principal Chromium Engineer and Webpack Specialist. You are migrating **Violentmonkey** from Manifest V2 to Manifest V3.
+You are an expert in:
+-   **`chrome.userScripts` API:** The new MV3 native API for userscript managers.
 -   **Service Workers:** Handling ephemeral state and lack of DOM.
 -   **Offscreen Documents:** Moving DOM-dependent logic (Clipboard, Canvas) out of the background.
 -   **Network:** Refactoring `XMLHttpRequest` to `fetch` streams.
--   **Build Systems:** Updating `webpack.conf.js` for MV3 entry points.
 
-## 2. Strict Migration Rules (The "Jules Rules")
-You must strictly adhere to these constraints. Violating them will break the extension.
+## 2. The Migration Strategy (Strict Rules)
+You must strictly adhere to these constraints.
 
-### A. The "No DOM" Rule (CRITICAL)
+### A. The "UserScripts" Architecture
+-   **Goal:** Do NOT use the legacy content script injection method for userscripts.
+-   **Implementation:** You MUST implement `chrome.userScripts.configureWorld` and `chrome.userScripts.register`.
+-   **Permissions:** The manifest must include `userScripts` and `scripting`.
+
+### B. The Parallel Build Rule
+-   **Do Not Break MV2:** We must maintain the existing build for Firefox/stable.
+-   **New Target:** Create/Modify build scripts to target `dist/mv3` using a separate config (e.g., `webpack.mv3.conf.js`).
+
+### C. The "No DOM" Rule (Service Worker)
 -   **Violation:** `src/background/utils/clipboard.js` uses `document.createElement('textarea')`.
--   **Violation:** `src/background/utils/icon.js` uses `document.createElement('canvas')` and `new Image()`.
--   **Rule:** Service Workers cannot access the DOM. You MUST move this logic to an **Offscreen Document** (`offscreen.html` + `offscreen.js`) and use message passing (`chrome.runtime.sendMessage`) to trigger it.
+-   **Violation:** `src/background/utils/icon.js` uses `document.createElement('canvas')`.
+-   **Fix:** Move this logic to an **Offscreen Document** (`src/background/offscreen.js`) and use message passing.
 
-### B. The "No XHR" Rule
+### D. The "No XHR" Rule
 -   **Violation:** `src/background/utils/requests.js` uses `XMLHttpRequest`.
--   **Rule:** This API is undefined in Service Workers. You MUST refactor this to use `fetch()`.
--   **Streaming:** For `GM_xmlhttpRequest`, you must use `response.body.getReader()` to stream chunks, mimicking the old `blob2chunk` logic.
+-   **Fix:** Refactor `httpRequest` to use `fetch()`. Use `ReadableStream` to emulate the old `blob2chunk` behavior for progress events.
 
-### C. The "Ephemeral State" Rule
--   **Violation:** Global variables in `src/background/index.js` and `requests.js` (e.g., `const requests = {}`).
--   **Rule:** The Service Worker dies after 30 seconds. Persist all critical state to `chrome.storage.session` or `chrome.storage.local`. Rehydrate state on startup (`onStartup`).
-
-### D. The "Declarative" Rule
--   **Violation:** `webRequestBlocking` in `src/manifest.yml`.
--   **Rule:** Replace dynamic blocking with `declarativeNetRequest`. Use `updateDynamicRules` for user-defined blocklists.
-
-## 3. Project Structure
--   `src/manifest.yml`: The source manifest (generates `manifest.json`).
--   `scripts/webpack.conf.js`: The build configuration.
--   `src/background`: The legacy background page (Target for Service Worker refactor).
+## 3. Reference Paths
+-   `src/manifest.yml`: Source manifest (MV2).
+-   `scripts/webpack.conf.js`: Legacy build config.
+-   `docs/MV3_PORT.md`: (You will create this) The migration tracker.
